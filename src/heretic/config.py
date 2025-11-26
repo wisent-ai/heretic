@@ -78,6 +78,16 @@ class Settings(BaseSettings):
         description="Whether to print detailed information about residuals and refusal directions after calculating them.",
     )
 
+    use_semantic_similarity: bool = Field(
+        default=True,
+        description="Whether to use semantic similarity for refusal detection. Uses the model's own embeddings to detect refusals that don't match keyword patterns.",
+    )
+
+    semantic_refusal_threshold: float = Field(
+        default=0.7,
+        description="Cosine similarity threshold for semantic refusal detection. Responses with similarity above this to reference refusals are considered refusals.",
+    )
+
     kl_divergence_scale: float = Field(
         default=1.0,
         description=(
