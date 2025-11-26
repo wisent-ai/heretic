@@ -185,6 +185,11 @@ class Settings(BaseSettings):
         description="Dataset of prompts that tend to result in refusals (used for evaluating model performance).",
     )
 
+    auto_save: str | None = Field(
+        default=None,
+        description="If set, automatically save the best model (lowest refusals) to this directory path without interactive prompts. Useful for headless/batch operation.",
+    )
+
     # "Model" refers to the Pydantic model of the settings class here,
     # not to the language model. The field must have this exact name.
     model_config = SettingsConfigDict(

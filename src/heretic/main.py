@@ -416,6 +416,47 @@ def run():
     print()
     print("[bold green]Optimization finished![/]")
     print()
+
+    # Handle auto-save mode (non-interactive)
+    if settings.auto_save is not None:
+        # Select the best trial (lowest refusals among Pareto-optimal)
+        best_trial = best_trials[0]  # Already sorted by refusals
+
+        print(f"[bold]Auto-save mode enabled[/]")
+        print(f"Best trial: [bold]{best_trial.user_attrs['index']}[/]")
+        print(f"  * Refusals: {best_trial.user_attrs['refusals']}/{len(evaluator.bad_prompts)}")
+        print(f"  * KL divergence: {best_trial.user_attrs['kl_divergence']:.2f}")
+        print()
+        print(f"Restoring model from trial [bold]{best_trial.user_attrs['index']}[/]...")
+        print("* Reloading model...")
+        model.reload_model()
+        print("* Abliterating...")
+        model.abliterate(
+            refusal_directions,
+            best_trial.user_attrs["direction_index"],
+            best_trial.user_attrs["parameters"],
+        )
+
+        save_directory = Path(settings.auto_save)
+        save_directory.mkdir(parents=True, exist_ok=True)
+
+        print(f"Saving model to [bold]{save_directory}[/]...")
+        model.model.save_pretrained(save_directory)
+        model.tokenizer.save_pretrained(save_directory)
+        print(f"[bold green]Model saved successfully to {save_directory}[/]")
+
+        # Also save trial info for reference
+        trial_info_path = save_directory / "trial_info.txt"
+        with open(trial_info_path, "w") as f:
+            f.write(f"Trial: {best_trial.user_attrs['index']}\n")
+            f.write(f"Refusals: {best_trial.user_attrs['refusals']}/{len(evaluator.bad_prompts)}\n")
+            f.write(f"KL divergence: {best_trial.user_attrs['kl_divergence']:.2f}\n")
+            f.write(f"\nParameters:\n")
+            for name, value in get_trial_parameters(best_trial).items():
+                f.write(f"  {name} = {value}\n")
+        print(f"Trial info saved to [bold]{trial_info_path}[/]")
+        return
+
     print(
         (
             "The following trials resulted in Pareto optimal combinations of refusals and KL divergence. "
